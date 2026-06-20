@@ -1,0 +1,51 @@
+{
+  "name": "@ragfly/sdk",
+  "version": "0.1.0",
+  "description": "RAGfly TypeScript/JavaScript SDK — retrieval infrastructure for your AI agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "ragfly",
+    "rag",
+    "retrieval",
+    "ai",
+    "agents",
+    "llm",
+    "vector-search",
+    "semantic-search",
+    "sdk"
+  ],
+  "author": "RAGfly",
+  "license": "MIT",
+  "homepage": "https://ragfly.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rufinocabreragaillard/ragfly-typescript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rufinocabreragaillard/ragfly-typescript/issues"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
