@@ -1,6 +1,6 @@
 import { RAGfly } from "@ragfly/sdk";
 
-const client = new RAGfly({ apiKey: process.env.RAGFLY_API_KEY ?? "rfly_..." });
+const client = new RAGfly({ apiKey: process.env.RAGFLY_API_KEY ?? "slm_live_..." });
 
 // Pregunta simple (RAG end-to-end)
 const resp = await client.ask("¿Cuáles son las ventas de Q1?");

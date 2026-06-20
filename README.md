@@ -15,7 +15,7 @@ npm install @ragfly/sdk
 ```ts
 import { RAGfly } from "@ragfly/sdk";
 
-const client = new RAGfly({ apiKey: "rfly_..." });
+const client = new RAGfly({ apiKey: "slm_live_..." });
 
 // Ask a question (RAG end-to-end)
 const resp = await client.ask("What are the Q1 sales figures?");
@@ -55,7 +55,7 @@ const client = new RAGfly({ apiKey: process.env.RAGFLY_API_KEY! });
 
 ```ts
 new RAGfly({
-  apiKey: "rfly_...",
+  apiKey: "slm_live_...",
   baseUrl: "https://api.ragfly.ai", // default
   timeoutMs: 60000,                 // default
   fetch: customFetch,               // optional, defaults to globalThis.fetch

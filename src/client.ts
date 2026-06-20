@@ -19,7 +19,7 @@ const DEFAULT_BASE_URL = "https://api.ragfly.ai";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
 export interface RAGflyOptions {
-  /** API key de RAGfly (formato `rfly_...`). Generala en app.ragfly.ai → Settings → API Keys. */
+  /** API key de RAGfly (formato `slm_live_...`). Generala en app.ragfly.ai → Settings → API Keys. */
   apiKey: string;
   /** URL base del backend. Default: `https://api.ragfly.ai`. */
   baseUrl?: string;
@@ -49,7 +49,7 @@ export class RAGfly {
 
   /**
    * @example
-   * const client = new RAGfly({ apiKey: "rfly_..." });
+   * const client = new RAGfly({ apiKey: "slm_live_..." });
    * const resp = await client.ask("¿Cuáles son las ventas de Q1?");
    * console.log(resp.answer);
    */
