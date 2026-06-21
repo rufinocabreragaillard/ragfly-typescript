@@ -17,6 +17,8 @@ import type {
 
 const DEFAULT_BASE_URL = "https://api.ragfly.ai";
 const DEFAULT_TIMEOUT_MS = 60_000;
+/** Función de interfaz por defecto para `ask()` (define el modelo LLM de la conversación). */
+const DEFAULT_FUNCION = "CHAT-USUARIO";
 
 export interface RAGflyOptions {
   /** API key de RAGfly (formato `slm_live_...`). Generala en app.ragfly.ai → Settings → API Keys. */
@@ -39,6 +41,12 @@ export interface SearchOptions {
 export interface AskOptions {
   conversationId?: number;
   stream?: boolean;
+  /**
+   * Código de la función de interfaz que define el modelo LLM de la conversación.
+   * Default: `CHAT-USUARIO` (la función "Conversa con tus documentos"). Solo se usa
+   * al crear una conversación nueva (cuando no se pasa `conversationId`).
+   */
+  codigoFuncion?: string;
 }
 
 export class RAGfly {
@@ -117,15 +125,15 @@ export class RAGfly {
     throw new RAGflyError(detail, resp.status);
   }
 
-  /** Crea una conversación temporal y devuelve su id. */
-  private async getOrCreateConversation(): Promise<number> {
+  /** Crea una conversación nueva y devuelve su id. */
+  private async getOrCreateConversation(codigoFuncion: string): Promise<number> {
     const resp = await this.doFetch("/interfaz/conversaciones", {
       method: "POST",
-      body: JSON.stringify({ titulo: "SDK", temporal: true }),
+      body: JSON.stringify({ titulo: "SDK", codigo_funcion: codigoFuncion }),
     });
     await this.raiseForStatus(resp);
-    const data = (await resp.json()) as { id: number };
-    return data.id;
+    const data = (await resp.json()) as { id_conversacion: number };
+    return data.id_conversacion;
   }
 
   // ── API pública ──────────────────────────────────────────────────────────
@@ -185,21 +193,25 @@ export class RAGfly {
    *
    * Para streaming token a token, usá {@link askStream} o `ask(q, { stream: true })`.
    */
-  ask(question: string, options?: { conversationId?: number; stream?: false }): Promise<AskResponse>;
-  ask(question: string, options: { conversationId?: number; stream: true }): AsyncGenerator<AskChunk>;
+  ask(question: string, options?: { conversationId?: number; codigoFuncion?: string; stream?: false }): Promise<AskResponse>;
+  ask(question: string, options: { conversationId?: number; codigoFuncion?: string; stream: true }): AsyncGenerator<AskChunk>;
   ask(
     question: string,
     options: AskOptions = {},
   ): Promise<AskResponse> | AsyncGenerator<AskChunk> {
     if (options.stream) {
-      return this.askStream(question, options.conversationId);
+      return this.askStream(question, options.conversationId, options.codigoFuncion);
     }
-    return this.askSync(question, options.conversationId);
+    return this.askSync(question, options.conversationId, options.codigoFuncion);
   }
 
   /** Pregunta al RAG y emite los tokens de la respuesta a medida que llegan (SSE). */
-  async *askStream(question: string, conversationId?: number): AsyncGenerator<AskChunk> {
-    const convId = conversationId ?? (await this.getOrCreateConversation());
+  async *askStream(
+    question: string,
+    conversationId?: number,
+    codigoFuncion: string = DEFAULT_FUNCION,
+  ): AsyncGenerator<AskChunk> {
+    const convId = conversationId ?? (await this.getOrCreateConversation(codigoFuncion));
     const resp = await this.doFetch(
       `/interfaz/conversaciones/${convId}/mensajes/stream`,
       { method: "POST", body: JSON.stringify({ contenido: question }) },
@@ -240,8 +252,12 @@ export class RAGfly {
     }
   }
 
-  private async askSync(question: string, conversationId?: number): Promise<AskResponse> {
-    const convId = conversationId ?? (await this.getOrCreateConversation());
+  private async askSync(
+    question: string,
+    conversationId?: number,
+    codigoFuncion: string = DEFAULT_FUNCION,
+  ): Promise<AskResponse> {
+    const convId = conversationId ?? (await this.getOrCreateConversation(codigoFuncion));
     const parts: string[] = [];
     for await (const chunk of this.askStream(question, convId)) {
       parts.push(chunk.delta);
