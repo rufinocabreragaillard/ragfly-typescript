@@ -159,12 +159,13 @@ export class RAGfly {
 
     const documents: Document[] = (data.resultados ?? []).map((d: any) => {
       const chunks: Chunk[] = (d.chunks ?? []).map((c: any) => {
-        const { texto, similitud, score_rerank, pagina, ...rest } = c;
+        // La API expone el nº de página como `nro_pagina` (no `pagina`).
+        const { texto, similitud, score_rerank, nro_pagina, ...rest } = c;
         return {
           texto: texto ?? "",
           similitud: similitud ?? null,
           scoreRerank: score_rerank ?? null,
-          pagina: pagina ?? null,
+          pagina: nro_pagina ?? null,
           extra: rest,
         };
       });
@@ -269,10 +270,13 @@ export class RAGfly {
   async listDocuments(
     options: { page?: number; pageSize?: number; estado?: string } = {},
   ): Promise<Record<string, unknown>> {
+    // El backend (GET /documentos/paginado) espera page/limit/codigo_estado_doc.
+    // FastAPI ignora params desconocidos, así que pagina/limite/estado se
+    // traducían en "sin filtro, 50 por defecto".
     const params = new URLSearchParams();
-    params.set("pagina", String(options.page ?? 1));
-    params.set("limite", String(options.pageSize ?? 20));
-    if (options.estado) params.set("estado", options.estado);
+    params.set("page", String(options.page ?? 1));
+    params.set("limit", String(options.pageSize ?? 20));
+    if (options.estado) params.set("codigo_estado_doc", options.estado);
 
     const resp = await this.doFetch(`/documentos/paginado?${params.toString()}`, {
       method: "GET",
