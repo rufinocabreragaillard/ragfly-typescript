@@ -1,0 +1,46 @@
+name: release
+
+# Publica @ragfly/sdk a npm al pushear un tag vX.Y.Z.
+# Forma canónica de release:
+#   1. subir "version" en package.json
+#   2. commit + push
+#   3. git tag vX.Y.Z && git push origin vX.Y.Z
+#
+# Requiere el secret NPM_TOKEN: un Granular Access Token de npm con
+# "Bypass 2FA" y permiso read+write sobre @ragfly/sdk (la cuenta `ragfly`
+# tiene 2FA y npm exige token bypass para publicar headless).
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verificar que el tag coincide con la versión del paquete
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          echo "tag=$TAG  package.json=$PKG"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::El tag v$TAG no coincide con la versión $PKG de package.json"
+            exit 1
+          fi
+
+      - name: Install + build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
