@@ -225,6 +225,7 @@ export class RAGfly {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let recibioDone = false;
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -242,11 +243,23 @@ export class RAGfly {
             continue;
           }
           if (payload.error) throw new RAGflyError(payload.error);
-          if (payload.done) return;
+          if (payload.done) {
+            recibioDone = true;
+            return;
+          }
           if (typeof payload.text === "string") {
             yield { delta: payload.text };
           }
         }
+      }
+      // El stream cerró sin el evento `done` final: respuesta truncada
+      // (corte de red, timeout del proxy). No tratar la respuesta parcial
+      // como completa — propagar como error.
+      if (!recibioDone) {
+        throw new RAGflyError(
+          "El stream de respuesta se cortó antes de terminar " +
+            "(sin evento 'done'); la respuesta puede estar incompleta.",
+        );
       }
     } finally {
       reader.releaseLock();
